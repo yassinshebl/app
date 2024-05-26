@@ -1,5 +1,3 @@
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
-
 import 'package:app/utils/app_styles.dart';
 import 'package:app/utils/custom_button.dart';
 import 'package:flutter/material.dart';
@@ -64,12 +62,14 @@ class _LoginPageState extends State<LoginPage> {
         if (role == 'student') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const StudentHomePage()),
+            MaterialPageRoute(
+                builder: (context) => StudentHomePage(userId: user.uid)),
           );
         } else if (role == 'instructor') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const InstructorHomePage()),
+            MaterialPageRoute(
+                builder: (context) => InstructorHomePage(userId: user.uid)),
           );
         }
       }
@@ -221,8 +221,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-// Start of reset password page
-
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
 
@@ -352,7 +350,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 }
 
 class StudentHomePage extends StatelessWidget {
-  const StudentHomePage({super.key});
+  final String userId;
+
+  const StudentHomePage({required this.userId, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -397,7 +397,13 @@ class StudentHomePage extends StatelessWidget {
               leading: const Icon(Icons.person),
               title: const Text('Profile'),
               onTap: () {
-                // Navigate to profile
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ProfilePage(userId: userId, role: 'student'),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -422,15 +428,34 @@ class StudentHomePage extends StatelessWidget {
           ],
         ),
       ),
-      body: const Center(
-        child: Text('Welcome, Student!'),
+      body: FutureBuilder<DocumentSnapshot>(
+        future:
+            FirebaseFirestore.instance.collection('student').doc(userId).get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error loading data'));
+          }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(child: Text('No data available'));
+          }
+          var studentData =
+              snapshot.data!.data() as Map<String, dynamic>? ?? {};
+          return Center(
+            child: Text('Welcome, ${studentData['s_FirstName']}!'),
+          );
+        },
       ),
     );
   }
 }
 
 class InstructorHomePage extends StatelessWidget {
-  const InstructorHomePage({super.key});
+  final String userId;
+
+  const InstructorHomePage({required this.userId, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -475,7 +500,13 @@ class InstructorHomePage extends StatelessWidget {
               leading: const Icon(Icons.person),
               title: const Text('Profile'),
               onTap: () {
-                // Navigate to profile
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ProfilePage(userId: userId, role: 'instructor'),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -500,8 +531,151 @@ class InstructorHomePage extends StatelessWidget {
           ],
         ),
       ),
-      body: const Center(
-        child: Text('Welcome, Instructor!'),
+      body: FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('instructor')
+            .doc(userId)
+            .get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error loading data'));
+          }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(child: Text('No data available'));
+          }
+          var instructorData =
+              snapshot.data!.data() as Map<String, dynamic>? ?? {};
+          return Center(
+            child: Text('Welcome, Dr. ${instructorData['i_FirstName']}!'),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class ProfilePage extends StatelessWidget {
+  final String userId;
+  final String role;
+
+  const ProfilePage({required this.userId, required this.role, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Profile',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: AppTheme.accent,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance.collection(role).doc(userId).get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error loading data'));
+          }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(child: Text('No data available'));
+          }
+          var userData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        role == 'student'
+                            ? 'Student\'s Information'
+                            : 'Instructor\'s Information',
+                        style: const TextStyle(fontSize: 30),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        decoration: const BoxDecoration(
+                          color: AppTheme.accent,
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(20),
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(50),
+                        height: 405,
+                        width: 800,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundImage: AssetImage(
+                                  '${userData[role == 'student' ? 's_FirstName' : 'i_ProfilePic']}'),
+                            ),
+                            const SizedBox(height: 20),
+
+                            Text(
+                              'Name: ${userData[role == 'student' ? 's_FirstName' : 'i_FirstName']} ${userData[role == 'student' ? 's_LastName' : 'i_LastName']}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Email: ${userData[role == 'student' ? 's_Email' : 'i_Email']}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Contact: ${userData[role == 'student' ? 's_Contact' : 'i_Contact']}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'ID: ${userData[role == 'student' ? 's_StudentID' : 'i_InstructorID']}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              role == 'student'
+                                  ? 'Major: ${userData['major_ID']}'
+                                  : 'Department: ${userData['d_DeptID']}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                            // Add more fields as necessary
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
