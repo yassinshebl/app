@@ -587,93 +587,98 @@ class ProfilePage extends StatelessWidget {
             return const Center(child: Text('No data available'));
           }
           var userData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        role == 'student'
-                            ? 'Student\'s Information'
-                            : 'Instructor\'s Information',
-                        style: const TextStyle(fontSize: 30),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        decoration: const BoxDecoration(
-                          color: AppTheme.accent,
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(20),
+          return Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/1609391092746.png"),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(Colors.black54, BlendMode.darken),
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white70,
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(20),
+                            ),
+                          ),
+                          padding: const EdgeInsets.all(30),
+                          height: 529,
+                          width: 800,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                role == 'student'
+                                    ? 'Student\'s Information'
+                                    : 'Instructor\'s Information',
+                                style: const TextStyle(fontSize: 30),
+                              ),
+                              const SizedBox(height: 10),
+                              Center(
+                                child: CircleAvatar(
+                                  radius: 80,
+                                  backgroundImage: AssetImage(
+                                      '${userData[role == 'student' ? 's_ProfilePic' : 'i_ProfilePic']}'),
+                                ),
+                              ),
+                              const SizedBox(height: 30),
+                              Center(
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white70,
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(20),
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.all(20),
+                                  width: 500,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Name: ${userData[role == 'student' ? 's_FirstName' : 'i_FirstName']} ${userData[role == 'student' ? 's_LastName' : 'i_LastName']}',
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Email: ${userData[role == 'student' ? 's_Email' : 'i_Email']}',
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Contact: ${userData[role == 'student' ? 's_Contact' : 'i_Contact']}',
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'ID: ${userData[role == 'student' ? 's_StudentID' : 'i_InstructorID']}',
+                                        style: const TextStyle(fontSize: 20),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        padding: const EdgeInsets.all(50),
-                        height: 405,
-                        width: 800,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundImage: AssetImage(
-                                  '${userData[role == 'student' ? 's_FirstName' : 'i_ProfilePic']}'),
-                            ),
-                            const SizedBox(height: 20),
-
-                            Text(
-                              'Name: ${userData[role == 'student' ? 's_FirstName' : 'i_FirstName']} ${userData[role == 'student' ? 's_LastName' : 'i_LastName']}',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Email: ${userData[role == 'student' ? 's_Email' : 'i_Email']}',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Contact: ${userData[role == 'student' ? 's_Contact' : 'i_Contact']}',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'ID: ${userData[role == 'student' ? 's_StudentID' : 'i_InstructorID']}',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              role == 'student'
-                                  ? 'Major: ${userData['major_ID']}'
-                                  : 'Department: ${userData['d_DeptID']}',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                            // Add more fields as necessary
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
