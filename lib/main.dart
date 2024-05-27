@@ -859,31 +859,52 @@ class CoursesPage extends StatelessWidget {
                           ),
                         ),
                         padding: const EdgeInsets.all(30),
-                        height: 200,
+                        height: 300,
                         width: 800,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              course['c_CourseName'],
-                              style: const TextStyle(
-                                fontSize: 24,
+                            const Text(
+                              'Courses',
+                              style: TextStyle(
+                                fontSize: 30,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Course Code: ${course['c_CourseCode']}',
-                              style: const TextStyle(
-                                fontSize: 18,
+                            const SizedBox(height: 20),
+                            Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.white70,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(20),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Credits: ${course['c_credit']}',
-                              style: const TextStyle(
-                                fontSize: 18,
+                              padding: const EdgeInsets.all(30),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    course['c_CourseName'],
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Course Code: ${course['c_CourseCode']}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Credits: ${course['c_credit']}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
