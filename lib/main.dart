@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:app/utils/app_styles.dart';
 import 'package:app/utils/custom_button.dart';
 import 'package:flutter/material.dart';
@@ -351,6 +353,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
 class StudentHomePage extends StatelessWidget {
   final String userId;
+  final String role = "student";
 
   const StudentHomePage({required this.userId, super.key});
 
@@ -389,9 +392,7 @@ class StudentHomePage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.home),
               title: const Text('Home'),
-              onTap: () {
-                // Navigate to home
-              },
+              onTap: () {},
             ),
             ListTile(
               leading: const Icon(Icons.person),
@@ -401,7 +402,7 @@ class StudentHomePage extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        ProfilePage(userId: userId, role: 'student'),
+                        ProfilePage(userId: userId, role: role),
                   ),
                 );
               },
@@ -410,7 +411,13 @@ class StudentHomePage extends StatelessWidget {
               leading: const Icon(Icons.book),
               title: const Text('Courses'),
               onTap: () {
-                // Navigate to courses
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CoursesPage(userId: userId, role: role),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -454,6 +461,7 @@ class StudentHomePage extends StatelessWidget {
 
 class InstructorHomePage extends StatelessWidget {
   final String userId;
+  final String role = "instructor";
 
   const InstructorHomePage({required this.userId, super.key});
 
@@ -492,9 +500,7 @@ class InstructorHomePage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.home),
               title: const Text('Home'),
-              onTap: () {
-                // Navigate to home
-              },
+              onTap: () {},
             ),
             ListTile(
               leading: const Icon(Icons.person),
@@ -504,7 +510,7 @@ class InstructorHomePage extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        ProfilePage(userId: userId, role: 'instructor'),
+                        ProfilePage(userId: userId, role: role),
                   ),
                 );
               },
@@ -513,7 +519,13 @@ class InstructorHomePage extends StatelessWidget {
               leading: const Icon(Icons.book),
               title: const Text('My Courses'),
               onTap: () {
-                // Navigate to my courses
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CoursesPage(userId: userId, role: role),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -678,6 +690,188 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class CoursesPage extends StatelessWidget {
+  final String role;
+  final String userId;
+
+  const CoursesPage({required this.role, required this.userId, super.key});
+
+  Future<List<Map<String, dynamic>>> _fetchCourses() async {
+    final firestore = FirebaseFirestore.instance;
+
+    List<Map<String, dynamic>> courses = [];
+
+    if (role == 'student') {
+      final studentDoc =
+          await firestore.collection('student').doc(userId).get();
+      final sStudentid = studentDoc.get('s_StudentID');
+
+      final enrollmentDocs = await firestore
+          .collection('enrollment')
+          .where('s_StudentID', isEqualTo: sStudentid)
+          .get();
+
+      for (var enrollment in enrollmentDocs.docs) {
+        final lLectureid = enrollment.get('l_LectureID');
+        final lectureDoc =
+            await firestore.collection('lecture').doc(lLectureid).get();
+        final cCoursecode = lectureDoc.get('c_CourseCode');
+        final courseDoc =
+            await firestore.collection('course').doc(cCoursecode).get();
+
+        if (courseDoc.exists) {
+          final courseData = courseDoc.data();
+          if (courseData != null) {
+            courses.add({
+              'c_CourseCode': courseData['c_CourseCode'],
+              'c_CourseName': courseData['c_CourseName'],
+              'c_credit': courseData['c_credit'],
+            });
+          }
+        }
+      }
+    } else if (role == 'instructor') {
+      final instructorDoc =
+          await firestore.collection('instructor').doc(userId).get();
+      final iInstructorID = instructorDoc.get('i_InstructorID');
+      print('Fetched instructor document: ${instructorDoc.data()}');
+      print('Instructor ID: $iInstructorID');
+
+      final lectureDocs = await firestore
+          .collection('lecture')
+          .where('i_InstructorID', isEqualTo: iInstructorID)
+          .get();
+      print(
+          'Fetched lecture documents for instructor: ${lectureDocs.docs.length} lectures found.');
+
+      Set<String> courseCodes = {};
+
+      for (var lecture in lectureDocs.docs) {
+        final cCoursecode = lecture.get('c_CourseCode');
+        print('Lecture ID: ${lecture.id}, Course Code: $cCoursecode');
+
+        if (!courseCodes.contains(cCoursecode)) {
+          final courseQuery = await firestore
+              .collection('course')
+              .where('c_CourseCode', isEqualTo: cCoursecode)
+              .get();
+          print(
+              'Fetched course documents for Course Code $cCoursecode: ${courseQuery.docs.length} courses found.');
+
+          for (var courseDoc in courseQuery.docs) {
+            final courseData = courseDoc.data();
+            print('Course document data: $courseData');
+
+            courses.add({
+              'c_CourseCode': courseData['c_CourseCode'],
+              'c_CourseName': courseData['c_CourseName'],
+              'c_credit': courseData['c_credit'],
+            });
+            print('Added course to list: ${courseData['c_CourseName']}');
+          }
+          courseCodes.add(cCoursecode);
+        } else {
+          print('Course Code $cCoursecode already processed, skipping.');
+        }
+      }
+    }
+
+    return courses;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Courses',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: AppTheme.accent,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _fetchCourses(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error loading courses'));
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No courses available'));
+          }
+
+          final courses = snapshot.data!;
+
+          return Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/1609391092746.png"),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(Colors.black54, BlendMode.darken),
+              ),
+            ),
+            child: Center(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: courses.length,
+                itemBuilder: (context, index) {
+                  final course = courses[index];
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.white70,
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(20),
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(30),
+                        height: 200,
+                        width: 800,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              course['c_CourseName'],
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Course Code: ${course['c_CourseCode']}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Credits: ${course['c_credit']}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           );
         },
