@@ -713,29 +713,50 @@ class CoursesPage extends StatelessWidget {
       final studentDoc =
           await firestore.collection('student').doc(userId).get();
       final sStudentid = studentDoc.get('s_StudentID');
+      print('Fetched student document: ${studentDoc.data()}');
+      print('Student ID: $sStudentid');
 
       final enrollmentDocs = await firestore
           .collection('enrollment')
           .where('s_StudentID', isEqualTo: sStudentid)
           .get();
+      print(
+          'Fetched enrollment documents for student: ${enrollmentDocs.docs.length} enrollments found.');
 
       for (var enrollment in enrollmentDocs.docs) {
         final lLectureid = enrollment.get('l_LectureID');
-        final lectureDoc =
-            await firestore.collection('lecture').doc(lLectureid).get();
-        final cCoursecode = lectureDoc.get('c_CourseCode');
-        final courseDoc =
-            await firestore.collection('course').doc(cCoursecode).get();
+        print('Enrollment ID: ${enrollment.id}, Lecture ID: $lLectureid');
 
-        if (courseDoc.exists) {
-          final courseData = courseDoc.data();
-          if (courseData != null) {
+        final lectureQuery = await firestore
+            .collection('lecture')
+            .where('l_LectureID', isEqualTo: lLectureid)
+            .get();
+        if (lectureQuery.docs.isNotEmpty) {
+          final lectureDoc = lectureQuery.docs.first;
+          final cCoursecode = lectureDoc.get('c_CourseCode');
+          print('Fetched lecture document: ${lectureDoc.data()}');
+          print('Course Code: $cCoursecode');
+
+          final courseQuery = await firestore
+              .collection('course')
+              .where('c_CourseCode', isEqualTo: cCoursecode)
+              .get();
+          print(
+              'Fetched course documents for Course Code $cCoursecode: ${courseQuery.docs.length} courses found.');
+
+          for (var courseDoc in courseQuery.docs) {
+            final courseData = courseDoc.data();
+            print('Course document data: $courseData');
+
             courses.add({
               'c_CourseCode': courseData['c_CourseCode'],
               'c_CourseName': courseData['c_CourseName'],
               'c_credit': courseData['c_credit'],
             });
+            print('Added course to list: ${courseData['c_CourseName']}');
           }
+        } else {
+          print('Lecture document not found for Lecture ID: $lLectureid');
         }
       }
     } else if (role == 'instructor') {
